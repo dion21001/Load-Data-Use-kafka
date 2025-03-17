@@ -1,5 +1,14 @@
-FROM apache/airflow:latest
+FROM python:3.9-slim
 
-# Jangan pakai USER root
-# Install kafka-python langsung dengan user airflow
-RUN pip install kafka-python
+WORKDIR /app
+
+
+COPY requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+COPY ./tugas_akhir /app/
+EXPOSE 123
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:1234"]
