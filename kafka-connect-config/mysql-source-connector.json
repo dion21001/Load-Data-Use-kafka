@@ -1,0 +1,14 @@
+{
+  "name": "mysql-source-connector",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "connection.url": "jdbc:mysql://db:3306/iot_db",
+    "connection.user": "root",
+    "connection.password": "Pramuka123@",
+    "table.whitelist": "sensor_data",
+    "mode": "incrementing",
+    "incrementing.column.name": "id",
+    "topic.prefix": "mysql-",
+    "poll.interval.ms": "5000"
+  }
+}
