@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -16,13 +18,13 @@ services:
     hostname: kafka
     container_name: kafka
     ports:
-      - "9092:9092"
-      - "9093:9093"
+      - "9092:9092"    # Internal & untuk Kafka Connect
+      - "9093:9093"    # External access (misal dari Python client lokal)
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://192.168.43.213:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXTERNAL://192.168.43.213:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
@@ -39,9 +41,9 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=Pramuka123@   # WAJIB DITAMBAHKAN
-      - MYSQL_PASSWORD=Pramuka123@        # Opsional, jika pakai user lain
-      - MYSQL_DATABASE=airflow-app-database
+      MYSQL_ROOT_PASSWORD: Pramuka123@
+      MYSQL_PASSWORD: Pramuka123@
+      MYSQL_DATABASE: airflow-app-database
     networks:
       - docker_kafka
     restart: always
@@ -54,6 +56,10 @@ services:
     networks:
       - docker_kafka
     restart: always
+    depends_on:
+      - db
+      - kafka
+
   kafka-connect:
     image: confluentinc/cp-kafka-connect:latest
     container_name: kafka-connect
@@ -66,11 +72,15 @@ services:
       CONNECT_CONFIG_STORAGE_TOPIC: "connect-configs"
       CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
       CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1      # ✅ Tambahkan ini
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1      # ✅ Tambahkan ini
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1      # ✅ Tambahkan ini
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_PLUGIN_PATH: "/usr/share/java,/etc/kafka-connect/jars"
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
     volumes:
       - ./kafka-connect-jars:/etc/kafka-connect/jars
       - ./kafka-connect-config:/kafka-connect-config
@@ -90,6 +100,8 @@ services:
         done
         wait
       "
+    restart: always
 
 networks:
   docker_kafka:
+    driver: bridge
