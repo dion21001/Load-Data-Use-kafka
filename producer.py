@@ -1,17 +1,16 @@
 from kafka import KafkaProducer
-
+import json
+import requests
 # Inisialisasi KafkaProducer
 producer = KafkaProducer(
-    bootstrap_servers='192.168.43.213:9093',  # Sesuaikan dengan Kafka di docker-compose kamu
-    value_serializer=lambda v: str(v).encode('utf-8')  # Biar otomatis jadi byte string
+    bootstrap_servers='kafka:9092',  
+    # karna kafka cluster hanya menerima byte maka untuk mengubah data menjadi byte maka digunakan code dibawah
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
-
+r = requests.get('https://api.github.com/events')
+json_data = r.json()
 # Kirim pesan ke topic
-producer.send('my-first-topic', value="Halo Kafka dari Python!")
-producer.send('my-first-topic', value="Pesan kedua dari Python!")
-producer.send('my-first-topic',value='jangan tinggalin abang dek')
-producer.send('my-first-topic',value='aku sayang kamu dek')
-
+producer.send('new-topic', value=json_data)
 # Wajib flush supaya dikirim
 producer.flush()
 print("Pesan berhasil dikirim!")

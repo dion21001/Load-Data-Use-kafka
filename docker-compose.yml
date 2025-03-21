@@ -43,7 +43,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: Pramuka123@
       MYSQL_PASSWORD: Pramuka123@
-      MYSQL_DATABASE: airflow-app-database
+      MYSQL_DATABASE: ETL
     networks:
       - docker_kafka
     restart: always
@@ -72,9 +72,9 @@ services:
       CONNECT_CONFIG_STORAGE_TOPIC: "connect-configs"
       CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
       CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1      # ✅ Tambahkan ini
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1      # ✅ Tambahkan ini
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1      # ✅ Tambahkan ini
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1      
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1      
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1      
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
@@ -101,6 +101,36 @@ services:
         wait
       "
     restart: always
+
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    container_name: control_center
+    restart: always
+    depends_on:
+      - kafka
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      PORT: 9021
+    ports:
+    - "9021:9021"    
+    networks:
+      - docker_kafka
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    container_name: schema_registry
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "kafka:9092"
+      SCHEMA_REGISTRY_HOST_NAME: "schema-registry"
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8084"
+    ports:
+      - "8084:8081"
+    networks:
+      - docker_kafka
 
 networks:
   docker_kafka:
