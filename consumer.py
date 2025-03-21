@@ -20,13 +20,12 @@ consumer = KafkaConsumer(
 )
 
 print("Menunggu pesan...")
-#load_dotenv()
-# Ambil konfigurasi database dari environment variables
-db_user = "root"
-db_password = "Pramuka123%40" 
-db_host = "mysql"  
-db_name = "ETL"
-table_name = "kafka_table"
+load_dotenv()
+db_user = os.getenv("db_user")
+db_password = os.getenv("db_password")
+db_host = os.getenv("db_host")
+db_name = os.getenv("db_name")
+table_name = os.getenv("table_name")
 
 # Buat koneksi ke database
 engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:3306/{db_name}")

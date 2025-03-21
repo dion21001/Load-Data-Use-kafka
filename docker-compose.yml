@@ -18,12 +18,14 @@ services:
     hostname: kafka
     container_name: kafka
     ports:
-      - "9092:9092"    # Internal & untuk Kafka Connect
-      - "9093:9093"    # External access (misal dari Python client lokal)
+      - "9092:9092"    
+      - "9093:9093"  
+    env_file:
+      - .env
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXTERNAL://192.168.43.213:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_EXTERNAL://${ip}:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -40,10 +42,12 @@ services:
     container_name: mysql
     ports:
       - "3306:3306"
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: Pramuka123@
-      MYSQL_PASSWORD: Pramuka123@
-      MYSQL_DATABASE: ETL
+      MYSQL_ROOT_PASSWORD: ${db_docker_compose}
+      MYSQL_PASSWORD: ${db_docker_compose}
+      MYSQL_DATABASE: ${db_name}
     networks:
       - docker_kafka
     restart: always
